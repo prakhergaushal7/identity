@@ -12,6 +12,11 @@ Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/ide
 }'
 ```
 
+## ToDo
+
+Refactoring (SOLID)
+Use ORM instead of raw queries to query the database
+
 ## Installation
 
 ```bash
