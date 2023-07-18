@@ -8,36 +8,12 @@ import {
   Param,
   HttpCode,
 } from '@nestjs/common';
-import { ContactsService } from './contacts.service';
+import { ContactsService } from './contact.service';
+import { ContactsHelper } from './contact.helper';
 
 @Controller('contact')
 export class ContactsController {
   constructor(private service: ContactsService) {}
-
-  getWhereClauseFromQuery(queryObj: any) {
-    const query = {};
-    const conditions = [];
-    const values = [];
-    for (const key in queryObj) {
-      if (queryObj.hasOwnProperty(key)) {
-        if (!['phoneNumber', 'email'].includes(key) || !queryObj[key]) {
-          continue;
-        }
-        query[key] = queryObj[key];
-        const condition = `${key} = ?`;
-        conditions.push(condition);
-        const value = queryObj[key];
-        values.push(value);
-      }
-    }
-    const condition = conditions.join(' or ');
-    const whereClause = condition ? `where ${condition}` : '';
-    return {
-      query,
-      whereClause,
-      values,
-    };
-  }
 
   @Get()
   list() {
@@ -67,17 +43,18 @@ export class ContactsController {
   @Post('identify')
   @HttpCode(200)
   async identify(@Body() body: any) {
-    const { query, whereClause, values } = this.getWhereClauseFromQuery(body);
+    const { query, whereClause, values } =
+      ContactsHelper.getWhereClauseFromQuery(body);
     if (!whereClause) {
       return {
         contact: {},
       };
     }
-    const contacts = await this.service.getContactsByIdentity(
+    const matchingContacts = await this.service.getContactsByIdentity(
       whereClause,
       values,
     );
-    if (!contacts.length) {
+    if (!matchingContacts.length) {
       const insertRes = await this.service.createContact(query);
       return {
         contact: {
@@ -88,71 +65,40 @@ export class ContactsController {
         },
       };
     }
-    let minimumPrimaryId = Infinity;
-    const primaryIdSet = new Set();
-    const paramCountMap = {
-      [query['email']]: 0,
-      [query['phoneNumber']]: 0,
-    };
-    for (const contact of contacts) {
-      if (contact.email === query['email']) {
-        paramCountMap[query['email']]++;
-      }
-      if (contact.phoneNumber === query['phoneNumber']) {
-        paramCountMap[query['phoneNumber']]++;
-      }
-      const primaryContactId =
-        contact.linkPrecedence === 'primary' ? contact.id : contact.linkedId;
-      primaryIdSet.add(primaryContactId);
-      minimumPrimaryId = Math.min(minimumPrimaryId, primaryContactId);
-    }
+
+    // ToDo - Refactor according to SOLID principles
+    const { minimumPrimaryId, paramCountMap, allPrimaryIds } =
+      ContactsHelper.getMetaDataForComputation(matchingContacts, query);
+
+    const promise = [];
     if (
       (query['email'] && !paramCountMap[query['email']]) ||
       (query['phoneNumber'] && !paramCountMap[query['phoneNumber']])
     ) {
-      await this.service.createContact({
-        ...query,
-        linkedId: minimumPrimaryId,
-        linkPrecedence: 'secondary',
-      });
-    }
-    if (minimumPrimaryId !== Infinity) {
-      primaryIdSet.delete(minimumPrimaryId);
-    }
-    const allPrimaryIds = [...primaryIdSet];
-
-    if (allPrimaryIds.length) {
-      await this.service.updateContactsByPrimaryId(
-        {
+      promise.push(
+        this.service.createContact({
+          ...query,
           linkedId: minimumPrimaryId,
           linkPrecedence: 'secondary',
-        },
-        allPrimaryIds,
+        }),
       );
     }
+    if (allPrimaryIds.length) {
+      promise.push(
+        this.service.updateContactsByPrimaryId(
+          {
+            linkedId: minimumPrimaryId,
+            linkPrecedence: 'secondary',
+          },
+          allPrimaryIds,
+        ),
+      );
+    }
+    await Promise.all(promise);
 
-    const finalContacts = await this.service.getContactsByPrimaryId(
+    const contacts = await this.service.getContactsByPrimaryId(
       minimumPrimaryId,
     );
-    const emailSet = new Set();
-    const phoneNumberSet = new Set();
-    const secondaryIdSet = new Set();
-    for (const contact of finalContacts) {
-      if (contact.email) {
-        emailSet.add(contact.email);
-      }
-      if (contact.phoneNumber) {
-        phoneNumberSet.add(contact.phoneNumber);
-      }
-      if (contact.linkedId && contact.linkPrecedence === 'secondary') {
-        secondaryIdSet.add(contact.id);
-      }
-    }
-    return {
-      primaryContactId: minimumPrimaryId,
-      emails: [...emailSet],
-      phoneNumbers: [...phoneNumberSet],
-      secondaryContactIds: [...secondaryIdSet],
-    };
+    return ContactsHelper.getResponseFromContacts(contacts, minimumPrimaryId);
   }
 }

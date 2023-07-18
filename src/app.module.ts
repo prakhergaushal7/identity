@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ContactsModule } from './contacts/contacts.module';
+import { ContactsModule } from './contacts/contact.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 
