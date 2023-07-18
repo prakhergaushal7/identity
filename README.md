@@ -1,4 +1,4 @@
-## Deployment
+## Description
 
 Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/identify
 
@@ -11,10 +11,6 @@ Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/ide
     "phoneNumber": "123456"
 }'
 ```
-
-## Description
-
-Identity reconciliation.
 
 ## Installation
 
