@@ -1,6 +1,20 @@
+## Deployment
+
+Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/identify
+
+## Sample Request
+
+```curl --location 'https://20002.stg.doubtnut.com/contact/identify' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "email": "lorraine@hillvalley.edu",
+    "phoneNumber": "123456"
+}'
+```
+
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript repository. Builds logic for identity reconciliation.
+Identity reconciliation.
 
 ## Installation
 
