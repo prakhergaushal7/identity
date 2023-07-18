@@ -18,6 +18,7 @@ curl --location 'https://20002.stg.doubtnut.com/contact/identify' \
 ```
 Refactoring (SOLID)
 Use ORM instead of raw queries to query the database
+Tests
 ```
 
 ## Installation
