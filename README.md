@@ -4,7 +4,8 @@ Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/ide
 
 ## Sample Request
 
-```curl --location 'https://20002.stg.doubtnut.com/contact/identify' \
+```
+curl --location 'https://20002.stg.doubtnut.com/contact/identify' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "email": "lorraine@hillvalley.edu",
@@ -14,19 +15,22 @@ Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/ide
 
 ## ToDo
 
-```Refactoring (SOLID)
+```
+Refactoring (SOLID)
 Use ORM instead of raw queries to query the database
 ```
 
 ## Installation
 
-```bash
+```
+bash
 $ npm install
 ```
 
 ## Running the app
 
-```bash
+```
+bash
 # development
 $ npm run start
 
@@ -39,7 +43,8 @@ $ npm run start:prod
 
 ## Test
 
-```bash
+```
+bash
 # unit tests
 $ npm run test
 
