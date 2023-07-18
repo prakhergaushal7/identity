@@ -6,6 +6,7 @@ import {
   Put,
   Delete,
   Param,
+  HttpCode,
 } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 
@@ -64,6 +65,7 @@ export class ContactsController {
   }
 
   @Post('identify')
+  @HttpCode(200)
   async identify(@Body() body: any) {
     const { query, whereClause, values } = this.getWhereClauseFromQuery(body);
     if (!whereClause) {
@@ -75,13 +77,11 @@ export class ContactsController {
       whereClause,
       values,
     );
-    console.log('contacts', contacts);
     if (!contacts.length) {
       const insertRes = await this.service.createContact(query);
-      console.log('insertRes', insertRes);
       return {
         contact: {
-          primaryContatctId: insertRes.insertId,
+          primaryContactId: insertRes.insertId,
           emails: [query['email']],
           phoneNumbers: [query['phoneNumber']],
           secondaryContactIds: [],
@@ -107,7 +107,8 @@ export class ContactsController {
       minimumPrimaryId = Math.min(minimumPrimaryId, primaryContactId);
     }
     if (
-      !(paramCountMap[query['email']] || paramCountMap[query['phoneNumber']])
+      (query['email'] && !paramCountMap[query['email']]) ||
+      (query['phoneNumber'] && !paramCountMap[query['phoneNumber']])
     ) {
       await this.service.createContact({
         ...query,
@@ -115,25 +116,24 @@ export class ContactsController {
         linkPrecedence: 'secondary',
       });
     }
-    console.log('minimumPrimaryId', minimumPrimaryId);
     if (minimumPrimaryId !== Infinity) {
       primaryIdSet.delete(minimumPrimaryId);
     }
     const allPrimaryIds = [...primaryIdSet];
-    console.log('allPrimaryIds', allPrimaryIds);
 
-    await this.service.updateContactsByPrimaryId(
-      {
-        linkedId: minimumPrimaryId,
-        linkPrecedence: 'secondary',
-      },
-      allPrimaryIds,
-    );
+    if (allPrimaryIds.length) {
+      await this.service.updateContactsByPrimaryId(
+        {
+          linkedId: minimumPrimaryId,
+          linkPrecedence: 'secondary',
+        },
+        allPrimaryIds,
+      );
+    }
 
     const finalContacts = await this.service.getContactsByPrimaryId(
       minimumPrimaryId,
     );
-    console.log('finalContacts', finalContacts);
     const emailSet = new Set();
     const phoneNumberSet = new Set();
     const secondaryIdSet = new Set();
@@ -149,7 +149,7 @@ export class ContactsController {
       }
     }
     return {
-      primaryContatctId: minimumPrimaryId,
+      primaryContactId: minimumPrimaryId,
       emails: [...emailSet],
       phoneNumbers: [...phoneNumberSet],
       secondaryContactIds: [...secondaryIdSet],

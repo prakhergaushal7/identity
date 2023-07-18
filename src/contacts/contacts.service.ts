@@ -39,14 +39,14 @@ export class ContactsService {
     values: any[],
   ): Promise<Contact[]> {
     return await this.contactRepository.query(
-      `SELECT * FROM contact ${whereClause} ORDER BY id ASC`,
+      `SELECT id, phoneNumber, email, linkedId, linkPrecedence FROM contact ${whereClause} ORDER BY id ASC`,
       values,
     );
   }
 
   async getContactsByPrimaryId(primaryId: number): Promise<Contact[]> {
     return await this.contactRepository.query(
-      'SELECT * FROM contact where id = ? or linkedId = ? order by id desc',
+      'SELECT id, phoneNumber, email, linkedId, linkPrecedence FROM contact where id = ? or linkedId = ? ORDER BY id ASC',
       [primaryId, primaryId],
     );
   }
