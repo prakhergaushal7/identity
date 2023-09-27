@@ -1,11 +1,11 @@
 ## Description
 
-Identity Reconciliation Service: POST <baseUrl>/contact/identify
+Identity Reconciliation Service: POST {baseUrl}/contact/identify
 
 ## Sample Request
 
 ```
-curl --location 'https://20002.stg.doubtnut.com/contact/identify' \
+curl --location '{baseUrl}/contact/identify' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "email": "lorraine@hillvalley.edu",
