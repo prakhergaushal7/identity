@@ -1,6 +1,6 @@
 ## Description
 
-Identity Reconciliation Service: POST https://20002.stg.doubtnut.com/contact/identify
+Identity Reconciliation Service: POST <baseUrl>/contact/identify
 
 ## Sample Request
 
